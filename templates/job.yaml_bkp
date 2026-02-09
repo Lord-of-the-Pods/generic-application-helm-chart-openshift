@@ -1,0 +1,110 @@
+ {{- if .Values.job }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.name }}-{{ .Values.job.env }}-{{ .Values.job.version }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "openshift-application.labels" . | nindent 4 }}
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: {{ .Values.job.sa }}
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        runAsNonRoot: true
+      restartPolicy: Never
+      containers:
+        - name: {{ .Values.name }}-job
+          image: registry.access.redhat.com/ubi9/nginx-124:latest
+          {{- with .Values.job.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}           
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+             set -eu
+
+             NEXUS_REPO="{{ .Values.job.reponame }}"
+             DIST_NAME="{{ .Values.job.distname }}"
+             VERSION="{{ .Values.job.version }}"
+             ENV="{{ .Values.job.env }}"
+
+             NEXUS_URL="{{ .Values.job.url }}"
+             ARTIFACT="repository/${NEXUS_REPO}/${ENV}/${DIST_NAME}/${VERSION}/${DIST_NAME}.tar.gz"
+             echo "${ARTIFACT}"
+             PVC_ROOT="/mnt/${NEXUS_REPO}"
+             UI_BASE="${PVC_ROOT}/${DIST_NAME}"
+             VERSION_DIR="${UI_BASE}/${VERSION}"
+             CURRENT_LINK="${UI_BASE}/current"
+
+             echo "Downloading ${ARTIFACT} from Nexus"
+             
+             if [ -d "${VERSION_DIR}" ];then
+               echo "Version ${VERSION} directory exists"
+               curl -v "${NEXUS_URL}/${ARTIFACT}" -o /tmp/"${DIST_NAME}".tar.gz
+               echo "Extracting UI"
+               tar -xzf /tmp/"${DIST_NAME}".tar.gz --strip-components=1 -C "${VERSION_DIR}"
+               echo "Updating current symlink"
+               ln -sfn "${VERSION}" "${CURRENT_LINK}"
+               echo "UI ${DIST_NAME} version ${VERSION} deployed successfully"
+             else
+             mkdir -p "${VERSION_DIR}"
+             curl -v "${NEXUS_URL}/${ARTIFACT}" -o /tmp/"${DIST_NAME}".tar.gz
+
+             echo "Extracting UI"
+             tar -xzf /tmp/"${DIST_NAME}".tar.gz --strip-components=1 -C "${VERSION_DIR}"
+             
+             echo "Updating current symlink"
+             ln -sfn "${VERSION}" "${CURRENT_LINK}"
+
+             echo "UI ${DIST_NAME} version ${VERSION} deployed successfully"
+             fi
+
+             {{- if .Values.job.distibm.enabled }}
+             echo "Checking if ibm dist is to be deployed"
+             DIST_NAME_IBM="{{ .Values.job.distibm.distname }}"
+             VERSION_IBM="{{ .Values.job.distibm.version }}"
+             ARTIFACT_IBM="repository/${NEXUS_REPO}/${ENV}/${DIST_NAME_IBM}/${VERSION_IBM}/${DIST_NAME_IBM}.tar.gz"
+             UI_BASE_IBM="${PVC_ROOT}/${DIST_NAME_IBM}"
+             VERSION_DIR_IBM="${UI_BASE_IBM}/${VERSION_IBM}"
+             CURRENT_LINK_IBM="${UI_BASE_IBM}/current" 
+             echo "Downloading ${ARTIFACT_IBM} from Nexus"
+
+             if [ -d "${VERSION_DIR_IBM}" ];then
+               echo "Version ${VERSION_IBM} directory exists"
+               curl -v "${NEXUS_URL}/${ARTIFACT_IBM}" -o /tmp/"${DIST_NAME_IBM}".tar.gz
+               echo "Extracting UI"
+               tar -xzf /tmp/"${DIST_NAME_IBM}".tar.gz --strip-components=1 -C "${VERSION_DIR_IBM}"
+               echo "Updating current symlink"
+               ln -sfn "${VERSION_IBM}" "${CURRENT_LINK_IBM}"
+               echo "UI ${DIST_NAME_IBM} version ${VERSION_IBM} deployed successfully"
+             else
+             mkdir -p "${VERSION_DIR_IBM}"
+             curl -v "${NEXUS_URL}/${ARTIFACT_IBM}" -o /tmp/"${DIST_NAME_IBM}".tar.gz
+
+             echo "Extracting UI"
+             tar -xzf /tmp/"${DIST_NAME_IBM}".tar.gz --strip-components=1 -C "${VERSION_DIR_IBM}"
+
+             echo "Updating current symlink"
+             ln -sfn "${VERSION_IBM}" "${CURRENT_LINK_IBM}"
+
+             echo "UI ${DIST_NAME_IBM} version ${VERSION_IBM} deployed successfully"
+             fi
+             {{- end }}             
+          {{- with .Values.job.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.job.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

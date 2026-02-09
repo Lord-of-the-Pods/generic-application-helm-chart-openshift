@@ -1,0 +1,16 @@
+{{- if .Values.servicemonitor }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata: 
+  name: {{ .Values.name }}-dev-sm
+  labels:
+    {{- include "openshift-application.labels" . | nindent 4 }}
+spec:
+  selector:
+     matchLabels:
+       {{- include "openshift-application.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http-{{ .Values.service.port }}
+      path: {{ .Values.servicemonitor.path }}
+      interval: 30s
+{{- end }}

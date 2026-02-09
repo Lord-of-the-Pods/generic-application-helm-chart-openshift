@@ -1,0 +1,26 @@
+# Sample values for testing the chart rendering
+name: my-app
+namespace: default
+replicaCount: 2
+image:
+  repository: nginx
+  tag: stable
+  pullPolicy: IfNotPresent
+ports:
+  containerPort: 8080
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+route:
+  enabled: false
+autoscaling:
+  enabled: false
+job: null
+servicemonitor: null
+podLabels: {}
+podAnnotations: {}
+env: []
+serviceAccount:
+  create: false
+
