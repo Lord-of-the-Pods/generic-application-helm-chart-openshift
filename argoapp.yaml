@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-multi-source-app
+  namespace: test-gitops
+spec:
+  project: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: my-app-namespace # Ensure this namespace exists or is set to auto-create
+  sources: # Use 'sources' (plural) field
+    # Source 1: The Git repository containing your custom values files
+    - repoURL: https://github.com/Lord-of-the-Pods/generic-application-helm-chart-openshift-values.git # Replace with your values repo URL
+      targetRevision: HEAD # Or a specific branch/tag
+      ref: values # Assign a reference name to this source
+      # Do not set a 'path' or 'chart' for this source if it only contains value files
+
+    # Source 2: The Helm chart repository
+    - repoURL: https://github.com/Lord-of-the-Pods/generic-application-helm-chart-openshift.git
+      # Replace with your Helm chart repo URL
+      chart: openshift-application # Replace with your chart name
+      targetRevision: 1.0.0 # Or a specific chart version
+      helm:
+        valueFiles:
+          # Reference the values file(s) from the 'values' source using the '$' prefix
+          - $values/my-app/values.yaml # Replace with the correct path in your values repo
+          # You can add multiple value files here; the last one wins in case of conflicts
