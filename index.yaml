@@ -9,6 +9,6 @@ entries:
     name: openshift-application
     type: application
     urls:
-    - https://github.com/Lord-of-the-Pods/generic-application-helm-chart-openshift/openshift-application-0.1.0.tgz
+    - openshift-application-0.1.0.tgz
     version: 0.1.0
 generated: "2026-02-10T11:22:37.182241+05:30"
