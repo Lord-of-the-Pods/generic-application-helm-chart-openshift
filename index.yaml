@@ -1,0 +1,24 @@
+apiVersion: v1
+entries:
+  openshift-application:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2026-02-10T11:22:37.185086+05:30"
+    description: A Helm chart for Kubernetes
+    digest: 3ab7a5ea530c4bcbd9e8abd848d7ebe80c860352b76607948668c2a0718cd917
+    name: openshift-application
+    type: application
+    urls:
+    - https://github.com/Lord-of-the-Pods/generic-application-helm-chart-openshift/openshift-application-0.1.0.tgz
+    version: 0.1.0
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2026-02-10T11:22:37.185996+05:30"
+    description: A Helm chart for Kubernetes
+    digest: 7b7ed05f3e7e0823bc08f597a6e5b8c78d75bfc776a5d077909ff814aff303ff
+    name: openshift-application
+    type: application
+    urls:
+    - https://github.com/Lord-of-the-Pods/generic-application-helm-chart-openshift/generic-application-helm-chart-openshift/openshift-application-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-02-10T11:22:37.182241+05:30"
